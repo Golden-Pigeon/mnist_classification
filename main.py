@@ -4,6 +4,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
+import tqdm
 
 batch_size = 64
 lr = 1e-3
@@ -47,10 +48,12 @@ model = Net().to(device)
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.CrossEntropyLoss()
 
-for epoch in range(1, epochs + 1):
+pbar = tqdm.trange(1, epochs + 1, position=0)
+pbar.set_description(f"Epoch {0:02d} Train loss: {0 / len(train_loader):.4f}")
+for epoch in pbar:
     model.train()
     total_loss = 0
-    for data, target in train_loader:
+    for data, target in tqdm.tqdm(train_loader, position=1, leave=False):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -58,13 +61,13 @@ for epoch in range(1, epochs + 1):
         loss.backward()
         optimizer.step()
         total_loss += loss.item()
-    print(f"Epoch {epoch}: Train loss = {total_loss / len(train_loader):.4f}")
+    pbar.set_description(f"Epoch {epoch:02d} Train loss: {total_loss / len(train_loader):.4f}")
 
 model.eval()
 correct = 0
 test_loss = 0
 with torch.no_grad():
-    for data, target in test_loader:
+    for data, target in tqdm.tqdm(test_loader):
         data, target = data.to(device), target.to(device)
         output = model(data)
         test_loss += criterion(output, target).item()
